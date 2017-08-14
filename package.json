@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "dexie": "~1.4.1",
-    "montage": "git://github.com/montagejs/montage.git#master"
+    "montage": "git://github.com/montagejs/montage.git#features/data",
   },
   "devDependencies": {
     "concurrently": "^3.4.0",

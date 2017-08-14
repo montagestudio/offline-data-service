@@ -1,6 +1,6 @@
-var OfflineService = require("montage/data/service/offline-service").OfflineService;
+var OfflineDataService = require("offline-data-service").OfflineDataService;
 
-describe("An OfflineService", function() {
+describe("An OfflineDataService", function() {
 
     xit("needs to be tested", function () {});
 
