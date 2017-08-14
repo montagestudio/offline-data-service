@@ -1,0 +1,10 @@
+{
+    "name": "montage-tests",
+    "version": "0.0.0",
+    "mappings": {
+        "montage": "../",
+        "montage-testing": "../node_modules/montage-testing",
+        "collections": "../node_modules/collections"
+    },
+    "manifest": true
+}
