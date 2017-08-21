@@ -1,6 +1,7 @@
 var RawDataService = require("montage/data/service/raw-data-service").RawDataService,
     DataStream = require("montage/data/service/data-stream").DataStream,
     Dexie = require("dexie"),
+    Montage = require("montage").Montage,
     Promise = require("montage/core/promise").Promise,
     uuid = require("montage/core/uuid"),
     DataOrdering = require("montage/data/model/data-ordering").DataOrdering,
@@ -454,7 +455,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
     tableNamed: {
         value: function(db, tableName) {
             var table = this._tableByName.get(tableName);
-            if(!table) {
+            if (!table) {
                 table = db[tableName];
                 if(!table) {
                     var tables = db.tables,
@@ -627,21 +628,16 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
 
     writeOfflineData: {
         value: function (rawDataArray, selector) {
-
             var self = this,
                 clonedArray = [],
                 updateOperationArray = [],
                 primaryKey;
-
-            // if (selector.type === "ProductThumbnail") {
-            //     console.log("Writing offline data (", rawDataArray, ")");
-            // }
-
+            
             return this._db.then(function (db) {
                 var tableName = selector.type,
                     table = self.tableNamed(db, tableName),
                     lastUpdated = Date.now(),
-                    dataID = this.dataIDPropertyName,
+                    dataID = self.dataIDPropertyName,
                     lastUpdatedPropertyName = this.lastFetchedPropertyName,
                     rawDataStream = new DataStream(),
                     i, countI, iRawData, iLastUpdated;
@@ -666,14 +662,13 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                 return self.fetchData(selector, rawDataStream);
 
             }).then(function (offlineSelectedRecords) {
-
                 var offlineObjectsToClear = [],
                     iRecord, iRecordPrimaryKey, rawDataMapByPrimaryKey, i, countI;
-
+                
                 for(i = 0, countI = offlineSelectedRecords.length; i < countI; i++) {
 
                     iRecord = offlineSelectedRecords[i];
-                    iRecordPrimaryKey = iRecord[self.dataIDPropertyName];
+                    iRecordPrimaryKey = iRecord[primaryKey];
 
                     if(!rawDataMapByPrimaryKey) {
                         rawDataMapByPrimaryKey = new Map();
@@ -682,12 +677,12 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                         });
                     }
 
-                    if(!rawDataMapByPrimaryKey.has(iRecord[primaryKey])) {
-                        offlineObjectsToClear.push(primaryKey);
+                    if(!rawDataMapByPrimaryKey.has(iRecordPrimaryKey)) {
+                        offlineObjectsToClear.push(rawDataMapByPrimaryKey.get(iRecordPrimaryKey));
                     }
 
                 }
-
+                
                 //Now we now what to delete: offlineObjectsToClear, what to put: rawDataArray.
                 //We need to be able to build a transaction and pass
 
@@ -743,11 +738,12 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                 //      offlineObjectsToClear in table and operationTable
 
                 return db.transaction('rw', table, operationTable, function () {
-                    return Dexie.Promise.all(
-                        [table.bulkPut(clonedRawDataArray),
-                            operationTable.bulkPut(clonedUpdateOperationArray),
-                            table.bulkDelete(clonedOfflineObjectsToClear),
-                            operationTable.bulkDelete(clonedOfflineObjectsToClear)]);
+                    return Dexie.Promise.all([
+                        table.bulkPut(clonedRawDataArray),
+                        operationTable.bulkPut(clonedUpdateOperationArray),
+                        table.bulkDelete(clonedOfflineObjectsToClear),
+                        operationTable.bulkDelete(clonedOfflineObjectsToClear)
+                    ]);
 
                 // }).then(function(value) {
                 //     //console.log(selector.type + ": performOfflineSelectorChanges succesful: "+rawDataArray.length+" rawDataArray, "+clonedUpdateOperationArray.length+" updateOperationArray");
@@ -911,12 +907,20 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
      */
     updateData: {
         value: function (objects, type, context) {
-            var self = this;
+            var self = this,
+                moduleInfo, typeName;
+            
+            if (typeof type !== "string") {
+                moduleInfo = Montage.getInfoForObject(type);
+                typeName = moduleInfo.objectName;
+            } else {
+                typeName = type;
+            }
             if(!objects || objects.length === 0) return Dexie.Promise.resolve();
 
             return new Promise(function (resolve, reject) {
                 self._db.then(function (myDB) {
-                    var table = self.tableNamed(myDB, type),
+                    var table = self.tableNamed(myDB, typeName),
                         operationTable = self.operationTable(myDB),
                         clonedObjects = objects.slice(0),
                         primaryKey = table.schema.primKey.name,
@@ -928,7 +932,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                         changesPropertyName = self.changesPropertyName,
                         operationPropertyName = self.operationPropertyName,
                         operationUpdateName = self.operationUpdateName;
-
+                    
                     myDB.open().then(function (db) {
                         db.transaction('rw', table, operationTable, function () {
                             //Make a clone of the array and create the record to track the online Last Updated date
