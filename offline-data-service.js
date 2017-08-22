@@ -7,7 +7,7 @@ var RawDataService = require("montage/data/service/raw-data-service").RawDataSer
     DataOrdering = require("montage/data/model/data-ordering").DataOrdering,
     DESCENDING = DataOrdering.DESCENDING,
     evaluate = require("montage/frb/evaluate"),
-    Map = require("montage/collections/map"),
+    Set = require("montage/collections/set"),
     OfflineDataService;
 
 /**
@@ -638,7 +638,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                     table = self.tableNamed(db, tableName),
                     lastUpdated = Date.now(),
                     dataID = self.dataIDPropertyName,
-                    lastUpdatedPropertyName = this.lastFetchedPropertyName,
+                    lastUpdatedPropertyName = self.lastFetchedPropertyName,
                     rawDataStream = new DataStream(),
                     i, countI, iRawData, iLastUpdated;
 
@@ -646,8 +646,8 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                 rawDataStream.query = selector;
 
                 //Make a clone of the array and create the record to track the online Last Updated date
-                for(i = 0, countI = rawDataArray.length; i < countI; i++) {
-                    if((iRawData = rawDataArray[i])) {
+                for (i = 0, countI = rawDataArray.length; i < countI; i++) {
+                    if ((iRawData = rawDataArray[i])) {
                         clonedArray.push(iRawData);
 
                         //Create the record to track the online Last Updated date
@@ -658,27 +658,28 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                         updateOperationArray.push(iLastUpdated);
                     }
                 }
+                
 
                 return self.fetchData(selector, rawDataStream);
 
             }).then(function (offlineSelectedRecords) {
                 var offlineObjectsToClear = [],
-                    iRecord, iRecordPrimaryKey, rawDataMapByPrimaryKey, i, countI;
+                    iRecord, iRecordPrimaryKey, rawDataPrimaryKeys, i, countI;
                 
                 for(i = 0, countI = offlineSelectedRecords.length; i < countI; i++) {
 
                     iRecord = offlineSelectedRecords[i];
                     iRecordPrimaryKey = iRecord[primaryKey];
 
-                    if(!rawDataMapByPrimaryKey) {
-                        rawDataMapByPrimaryKey = new Map();
+                    if(!rawDataPrimaryKeys) {
+                        rawDataPrimaryKeys = new Set();
                         rawDataArray.forEach(function (rawData) {
-                            rawDataMapByPrimaryKey.set(rawData[primaryKey], rawData);
+                            rawDataPrimaryKeys.add(rawData[primaryKey]);
                         });
                     }
 
-                    if(!rawDataMapByPrimaryKey.has(iRecordPrimaryKey)) {
-                        offlineObjectsToClear.push(rawDataMapByPrimaryKey.get(iRecordPrimaryKey));
+                    if(!rawDataPrimaryKeys.has(iRecordPrimaryKey)) {
+                        offlineObjectsToClear.push(iRecordPrimaryKey);
                     }
 
                 }
@@ -729,7 +730,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
             }).then(function (db) {
                 var table = db[selector.type],
                     operationTable = self.operationTable(indexedDB);
-
+                
                 //Transaction:
                 //Objects to put:
                 //      rawDataArray
@@ -935,21 +936,23 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                     
                     myDB.open().then(function (db) {
                         db.transaction('rw', table, operationTable, function () {
+                            
                             //Make a clone of the array and create the record to track the online Last Updated date
                             var iOperation, iRawData, iPrimaryKey;
                             for(var i = 0, countI = objects.length; i < countI; i++) {
                                 if((iRawData = objects[i])) {
                                     iPrimaryKey = iRawData[primaryKey];
                                     updateDataPromises.push(table.update(iPrimaryKey, iRawData));
-
+                                    
                                     //Create the record to track of last modified date
                                     iOperation = {};
                                     iOperation[dataID] = iPrimaryKey;
                                     iOperation[lastModifiedPropertyName] = lastModified;
-                                    iOperation[typePropertyName] = type;
+                                    iOperation[typePropertyName] = typeName;
                                     iOperation[changesPropertyName] = iRawData;
                                     iOperation[operationPropertyName] = operationUpdateName;
                                     iOperation.context = context;
+                                    
                                     updateDataPromises.push(operationTable.put(iOperation));
                                 }
                             }
@@ -960,8 +963,8 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                             self.registerOfflinePrimaryKeyDependenciesForData(objects, table.name, primaryKey);
                             resolve(clonedObjects);
                         }).catch(function(e) {
-                            reject(e);
                             console.error(table.name,": failed to updateData for ",objects.length," objects with error",e);
+                            reject(e);
                         });
                     });
                 });
