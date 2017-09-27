@@ -506,7 +506,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                     var table = self.tableNamed(myDB, selector.type),
                         whereProperties = (criteria && criteria.parameters) ? Object.keys(criteria.parameters) : undefined;
                     
-                    if(whereProperties && whereProperties.length) {
+                    if (whereProperties && whereProperties.length) {
                         var wherePromise,
                             resultPromise,
                             whereProperty = whereProperties.shift(),
@@ -542,19 +542,9 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                             });
                         } else {
                             if (Array.isArray(whereValue)) {
-                                resultPromise = table
-                                    .where(whereProperty)
-                                    .anyOf(whereValue);
+                                resultPromise = table.where(whereProperty).anyOf(whereValue);
                             } else {
-                                resultPromise = table
-                                    .where(whereProperty)
-                                    .equals(whereValue);
-
-                                // if(selector.type === "Hazard") {
-                                //     global.DEBUG = true;
-                                //     //debugger;
-                                // }
-
+                                resultPromise = table.where(whereProperty).equals(whereValue);
                             }
                         }
                         resultPromise.toArray(function(results) {
@@ -632,6 +622,8 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                 clonedArray = [],
                 updateOperationArray = [],
                 primaryKey;
+
+            
             
             return this._db.then(function (db) {
                 var tableName = selector.type,
@@ -671,14 +663,14 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                     iRecord = offlineSelectedRecords[i];
                     iRecordPrimaryKey = iRecord[primaryKey];
 
-                    if(!rawDataPrimaryKeys) {
+                    if (!rawDataPrimaryKeys) {
                         rawDataPrimaryKeys = new Set();
                         rawDataArray.forEach(function (rawData) {
                             rawDataPrimaryKeys.add(rawData[primaryKey]);
                         });
                     }
 
-                    if(!rawDataPrimaryKeys.has(iRecordPrimaryKey)) {
+                    if (!rawDataPrimaryKeys.has(iRecordPrimaryKey)) {
                         offlineObjectsToClear.push(iRecordPrimaryKey);
                     }
 
@@ -737,6 +729,8 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                 //      updateOperationArray
                 //Objects to delete:
                 //      offlineObjectsToClear in table and operationTable
+            
+                
 
                 return db.transaction('rw', table, operationTable, function () {
                     return Dexie.Promise.all([
@@ -790,11 +784,19 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
      */
     createData: {
         value: function (objects, type, context) {
-            var self = this;
+            var self = this,
+                typeName;
+
+            if (typeof type !== "string") {
+                moduleInfo = Montage.getInfoForObject(type);
+                typeName = moduleInfo.objectName;
+            } else {
+                typeName = type;
+            }
             return new Promise(function (resolve, reject) {
                 self._db.then(function (myDB) {
 
-                    var table = self.tableNamed(myDB, type),
+                    var table = self.tableNamed(myDB, typeName),
                         operationTable = self.operationTable(myDB),
                         clonedObjects = [],
                         operations = [],
@@ -813,6 +815,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                         db.transaction('rw', table, operationTable, function () {
                             //Assign primary keys and build operations
                             for(var i = 0, countI = objects.length, iRawData, iPrimaryKey, iOperation; i<countI;i++) {
+
                                 if((iRawData = objects[i])) {
 
                                     if (typeof iRawData[primaryKey] === "undefined" || iRawData[primaryKey] === "") {
@@ -822,7 +825,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                                         //keep track of primaryKeys:
                                         primaryKeys.push(iPrimaryKey);
                                     } else {
-                                        console.log("### OfflineDataService createData ",type,": iRawData ",iRawData," already have a primaryKey[",primaryKey,"]");
+                                        console.log("### OfflineDataService createData ",typeName,": iRawData ",iRawData," already have a primaryKey[",primaryKey,"]");
                                     }
 
                                     clonedObjects.push(iRawData);
@@ -831,7 +834,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                                     iOperation = {};
                                     iOperation[dataID] = iPrimaryKey;
                                     iOperation[lastModifiedPropertyName] = lastModified;
-                                    iOperation[typePropertyName] = type;
+                                    iOperation[typePropertyName] = typeName;
                                     iOperation[changesPropertyName] = iRawData;
                                     iOperation[operationPropertyName] = operationCreateName;
                                     iOperation.context = context;
