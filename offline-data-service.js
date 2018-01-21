@@ -1,4 +1,6 @@
 var RawDataService = require("montage/data/service/raw-data-service").RawDataService,
+    Criteria = require("montage/core/criteria").Criteria,
+    DataQuery = require("montage/data/model/data-query").DataQuery,
     DataStream = require("montage/data/service/data-stream").DataStream,
     Dexie = require("dexie"),
     Montage = require("montage").Montage,
@@ -621,6 +623,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
             var self = this,
                 clonedArray = [],
                 updateOperationArray = [],
+                cookedSelector, criteria,
                 primaryKey;
 
             
@@ -651,6 +654,11 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                     }
                 }
                 
+                // Create a criteria and query compatible with fetchData()
+                // - writeOfflineData accepts a raw selector such that selector.criteria is a POJO. 
+                // - fetchData() accepts a cooked selector such that selector.criteria is a formal Criteria object.
+                criteria = new Criteria().initWithExpression("", selector.criteria);
+                cookedSelector = DataQuery.withTypeAndCriteria(selector.type, criteria);
 
                 return self.fetchData(selector, rawDataStream);
 
@@ -676,8 +684,13 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
 
                 }
                 
+
+
+                
+
                 //Now we now what to delete: offlineObjectsToClear, what to put: rawDataArray.
                 //We need to be able to build a transaction and pass
+                
 
                 // 3) Put new objects
                 return self.performOfflineSelectorChanges(selector, clonedArray, updateOperationArray, offlineObjectsToClear);
