@@ -660,7 +660,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                 criteria = new Criteria().initWithExpression("", selector.criteria);
                 cookedSelector = DataQuery.withTypeAndCriteria(selector.type, criteria);
 
-                return self.fetchData(selector, rawDataStream);
+                return self.fetchData(cookedSelector, rawDataStream);
 
             }).then(function (offlineSelectedRecords) {
                 var offlineObjectsToClear = [],
