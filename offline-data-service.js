@@ -657,9 +657,13 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                 // Create a criteria and query compatible with fetchData()
                 // - writeOfflineData accepts a raw selector such that selector.criteria is a POJO. 
                 // - fetchData() accepts a cooked selector such that selector.criteria is a formal Criteria object.
-                criteria = new Criteria().initWithExpression("", selector.criteria);
-                cookedSelector = DataQuery.withTypeAndCriteria(selector.type, criteria);
-
+                if (selector.criteria instanceof Criteria) {
+                    cookedSelector = selector;
+                } else {
+                    criteria = new Criteria().initWithExpression("", selector.criteria);
+                    cookedSelector = DataQuery.withTypeAndCriteria(selector.type, criteria);
+                }
+                
                 return self.fetchData(cookedSelector, rawDataStream);
 
             }).then(function (offlineSelectedRecords) {
