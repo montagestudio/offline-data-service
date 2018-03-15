@@ -64,7 +64,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
             return this._faulty_safari_versions.some(function (userAgentStrings) {
                 return userAgentStrings.every(function (userAgentString) {
                     return navigator.userAgent.indexOf(userAgentString) !== -1;
-                })
+                });
             });
         }
     },
@@ -166,7 +166,6 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
             })
         }
     },
-
 
     /**
      * Main initialization method
@@ -587,6 +586,8 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                 }).catch(function (e) {
                     stream.dataError(e);
                 });
+            }).catch(function (e) {
+                stream.dataError(e);
             });
 
             // Return the passed in or created stream.
@@ -719,7 +720,10 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                             console.error(e);
                             reject(e);
                         });
-                    })
+                    });
+                }).catch(function (e) { 
+                    console.error(e);
+                    reject(e);
                 });
             });
         }
@@ -886,6 +890,9 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                             console.error(e);
                         });
                     });
+                }).catch(function(e) {
+                    reject(e);
+                    console.error(e);
                 });
             });
         }
@@ -912,6 +919,9 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                         console.error(table.name,": failed to delete record with primaryKwy ", currentPrimaryKey, e);
                     });
                 });
+            }).catch(function(e) {
+                // console.log("tableName:failed to addO ffline Data",e)
+                console.error(e);
             });
         }
     },
@@ -987,6 +997,10 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                             reject(e);
                         });
                     });
+                }).catch(function(e) {
+                    // console.log("tableName:failed to addO ffline Data",e)
+                    console.error(e);
+                    reject(e);
                 });
             });
         }
@@ -1056,6 +1070,9 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                             console.error(table.name,": failed to updateData for ",objects.length," objects with error",e);
                         });
                     });
+                }).catch(function(e) {
+                    console.error(e);
+                    reject(e);                    
                 });
             });
         }
@@ -1440,5 +1457,19 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                 });
             })
         }
+    },
+
+
+    deleteAllDBs: {
+        value: function () {
+            var promises = this._registeredOfflineDataServiceByName.map(function (value, key) {
+                return Dexie.delete(key);
+            });
+            Promise.all(promises).then(function () {3
+                console.log("Databases Deleted");
+            });
+        }
     }
 });
+
+window.deleteAllDBs = exports.OfflineDataService.deleteAllDBs.bind(exports.OfflineDataService);
