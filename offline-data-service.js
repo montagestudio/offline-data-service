@@ -1472,4 +1472,4 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
     }
 });
 
-window.deleteAllDBs = exports.OfflineDataService.deleteAllDBs.bind(exports.OfflineDataService);
+global.deleteAllDBs = exports.OfflineDataService.deleteAllDBs.bind(exports.OfflineDataService);
