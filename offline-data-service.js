@@ -1017,9 +1017,17 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
      */
     deleteData: {
         value: function (objects, type, context) {
-            var self = this;
+            var self = this,
+                moduleInfo;
 
             if(!objects || objects.length === 0) return Dexie.Promise.resolve();
+
+            if (typeof type !== "string") {
+                moduleInfo = Montage.getInfoForObject(type);
+                type = moduleInfo.objectName;
+            } else {
+                type = type;
+            }
 
             return new Promise(function (resolve, reject) {
                 self._db.then(function (myDB) {
