@@ -155,7 +155,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                     return Promise.all(db.tables.map(function (table) {
                         return table.toArray().then(function (rows) {
                             return dbCopy.table(table.name).bulkAdd(rows);
-                        })
+                        });
                     }));
                 }).catch(function (error) {
                     console.log("Error copying database (", error, ")");
@@ -163,7 +163,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                     db.close();
                     dbCopy.close();
                 });
-            })
+            });
         }
     },
 
@@ -616,9 +616,6 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
      *                                   [addRawData()]{@link DataMapping#addRawData}
      *                                   call that is invoking this method.
      */
-
-    //writeOfflineData/readOfflineOperation
-
     writeOfflineData: {
         value: function (rawDataArray, selector) {
             var self = this,
@@ -627,8 +624,6 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                 cookedSelector, criteria,
                 primaryKey;
 
-            
-            
             return this._db.then(function (db) {
                 var tableName = selector.type,
                     table = self.tableNamed(db, tableName),
@@ -688,14 +683,9 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                     }
 
                 }
-                
-
-
-                
 
                 //Now we now what to delete: offlineObjectsToClear, what to put: rawDataArray.
                 //We need to be able to build a transaction and pass
-                
 
                 // 3) Put new objects
                 return self.performOfflineSelectorChanges(selector, clonedArray, updateOperationArray, offlineObjectsToClear);
@@ -716,7 +706,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                         self.operationTable(db).where("operation").anyOf("create", "update", "delete").toArray(function (offlineOperations) {
                             resolve(offlineOperations);
                         }).catch(function (e) {
-                            console.log(selector.type + ": performOfflineSelectorChanges failed", e);
+                            console.log(selector.type + ": performOfflineSelectorChanges failed", e); // Error selector is not defined.
                             console.error(e);
                             reject(e);
                         });
@@ -809,7 +799,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                 typeName;
 
             if (typeof type !== "string") {
-                moduleInfo = Montage.getInfoForObject(type);
+                var moduleInfo = Montage.getInfoForObject(type);
                 typeName = moduleInfo.objectName;
             } else {
                 typeName = type;
@@ -1310,7 +1300,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                     i, iDependency, found = false,
                     primaryKeysRecord;
 
-                //Now we search for a match... whish we could use an in-memory
+                //Now we search for a match... wish we could use an in-memory
                 //compound-index...
                 if(dependencies) {
                     for(i=0;(iDependency = dependencies[i]);i++) {
@@ -1463,7 +1453,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                     console.error("deleteOfflinePrimaryKeys failed",e);
                     reject(e);
                 });
-            })
+            });
         }
     },
 
@@ -1473,7 +1463,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
             var promises = this._registeredOfflineDataServiceByName.map(function (value, key) {
                 return Dexie.delete(key);
             });
-            Promise.all(promises).then(function () {3
+            Promise.all(promises).then(function () {
                 console.log("Databases Deleted");
             });
         }

@@ -1,0 +1,30 @@
+{
+    "root": {
+        "prototype": "montage/data/service/expression-data-mapping",
+        "properties": {
+            "rawDataPrimaryKeys":["id"],
+            "objectDescriptor": {"@": "MovieDescriptor"},
+            "objectMapping": {
+                "rules": {
+                    "id": {"<->": "id"},
+                    "isFeatured": {"<->": "isFeatured"},
+                    "releaseDate": {
+                        "<->": "releaseDate",
+                        "converter": {"@": "dateConverter"}
+                    },
+                    "title": {"<->": "title"},
+                    "tomatometer": {"<->": "tomatometer"}
+                }
+            },
+            "requisitePropertyNames": [
+                "id", "isFeatured", "releaseDate", "title", "tomatometer"
+            ]
+        }
+    },
+    "MovieDescriptor": {
+        "object": "data/model/movie.mjson"
+    },
+    "dateConverter": {
+        "prototype": "logic/converter/date-converter"
+    }
+}

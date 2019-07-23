@@ -1,0 +1,57 @@
+{
+    "root": {
+        "prototype": "montage/core/meta/module-object-descriptor",
+        "values": {
+            "name": "Movie",
+            "propertyDescriptors": [
+                {"@": "id"},
+                {"@": "isFeatured"},
+                {"@": "releaseDate"},
+                {"@": "title"},
+                {"@": "tomatometer"}
+            ],
+            "exportName": "Movie",
+            "objectDescriptorModule": {
+                "%": "data/model/movie.mjson"
+            },
+            "module": {
+                "%": "logic/model/movie"
+            }
+        }
+    },
+    "id": {
+        "prototype": "montage/core/meta/property-descriptor",
+        "properties": {
+            "name": "id",
+            "valueType": "number"
+        }
+    },
+    "isFeatured": {
+        "prototype": "montage/core/meta/property-descriptor",
+        "properties": {
+            "name": "isFeatured",
+            "valueType": "boolean"
+        }
+    },
+    "releaseDate": {
+        "prototype": "montage/core/meta/property-descriptor",
+        "properties": {
+            "name": "releaseDate",
+            "valueType": "Date"
+        }
+    },
+    "title": {
+        "prototype": "montage/core/meta/property-descriptor",
+        "properties": {
+            "name": "title",
+            "valueType": "string"
+        }
+    },
+    "tomatometer": {
+        "prototype": "montage/core/meta/property-descriptor",
+        "properties": {
+            "name": "tomatometer",
+            "valueType": "number"
+        }
+    }
+}
