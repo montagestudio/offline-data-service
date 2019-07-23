@@ -1,0 +1,21 @@
+{
+    "root": {
+        "prototype": "logic/service/movie-service",
+        "values": {
+            "name": "MovieService",
+            "exportName": "MovieService",
+            "types": [
+                {"@": "movie"}
+            ],
+            "mappings": [
+                {"@": "movieMapping"}
+            ]
+        }
+    },
+    "movie": {
+        "object": "data/model/movie.mjson"
+    },
+    "movieMapping": {
+        "object": "data/mapping/movie-mapping.mjson"
+    }
+}

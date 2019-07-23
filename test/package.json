@@ -15,16 +15,11 @@
     "url": "montagestudio/offline-data-service-tests"
   },
   "scripts": {
-    "postinstall": "npm link ./.."
   },
   "mappings": {
     "montage": "../node_modules/montage",
     "montage-testing": "../node_modules/montage-testing",
     "offline-data-service": "../"
-  },
-  "dependencies": {
-    "montage": "~16.0.x",
-    "moment-timezone": "~0.5.x"
   },
   "private": true
 }
