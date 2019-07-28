@@ -7,7 +7,8 @@
                 {"@": "id"},
                 {"@": "isFeatured"},
                 {"@": "releaseDate"},
-                {"@": "title"}
+                {"@": "title"},
+                {"@": "tomatometer"}
             ],
             "exportName": "Movie",
             "objectDescriptorModule": {
@@ -44,6 +45,13 @@
         "properties": {
             "name": "title",
             "valueType": "string"
+        }
+    },
+    "tomatometer": {
+        "prototype": "montage/core/meta/property-descriptor",
+        "properties": {
+            "name": "tomatometer",
+            "valueType": "number"
         }
     }
 }

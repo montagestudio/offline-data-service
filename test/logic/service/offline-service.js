@@ -222,7 +222,22 @@ exports.OfflineService = RawDataService.specialize(/** @lends HttpService.protot
 			//We save locally no matter what:
 			//Hard code hazard.type.name to Hazard.TYPE.
 			return shouldCreateData ?   service.createData([data], constructor, saveContext) :
-				service.updateData([data], constructor, saveContext);
+										service.updateData([data], constructor, saveContext);
+		}
+	},
+
+	deleteRawData: {
+		value: function (data, object) {
+			var service = this.offlineService,
+				saveContext = this.contextForSavingRawData(data, object),
+				constructor = object.constructor;
+			return service.deleteData([data], constructor, saveContext);
+		}
+	},
+
+	contextForSavingRawData: {
+		value: function (/* data, object */) {
+			return undefined;
 		}
 	},
 

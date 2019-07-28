@@ -47,6 +47,13 @@ exports.Movie = Montage.specialize({
 	 */
 	title: {
 		value: undefined
+	},
+
+	/**
+	 * @type {number}
+	 */
+	tomatometer: {
+		value: 0
 	}
 
 });

@@ -57,3 +57,9 @@ typings/
 # dotenv environment variables file
 .env
 
+# Developer-specific IDE files that shouldn't be committed.
+*.xcodeproj
+.idea
+atlassian-ide-plugin.xml
+.vscode
+.tags

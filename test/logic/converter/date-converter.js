@@ -15,7 +15,10 @@ exports.DateConverter = Converter.specialize( /** @lends DateConverter# */ {
 	 */
 	convert: {
 		value: function (value) {
-			return value ? new Date(value) : null;
+			var components = value.split("-"),
+				date = new Date();
+			date.setFullYear(components[0], components[1] - 1, components[2]);
+			return date;
 		}
 	},
 
@@ -27,7 +30,8 @@ exports.DateConverter = Converter.specialize( /** @lends DateConverter# */ {
 	 */
 	revert: {
 		value: function (value) {
-			return value && value.toISOString();
+			value = value || new Date();
+			return [value.getFullYear(), value.getMonth() + 1, value.getDate()].join("-");
 		}
 	}
 

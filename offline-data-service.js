@@ -155,7 +155,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                     return Promise.all(db.tables.map(function (table) {
                         return table.toArray().then(function (rows) {
                             return dbCopy.table(table.name).bulkAdd(rows);
-                        })
+                        });
                     }));
                 }).catch(function (error) {
                     console.log("Error copying database (", error, ")");
@@ -163,7 +163,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                     db.close();
                     dbCopy.close();
                 });
-            })
+            });
         }
     },
 
@@ -706,7 +706,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                         self.operationTable(db).where("operation").anyOf("create", "update", "delete").toArray(function (offlineOperations) {
                             resolve(offlineOperations);
                         }).catch(function (e) {
-                            console.log(selector.type + ": performOfflineSelectorChanges failed", e);
+                            console.log(selector.type + ": performOfflineSelectorChanges failed", e); // Error selector is not defined.
                             console.error(e);
                             reject(e);
                         });
@@ -799,7 +799,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                 typeName;
 
             if (typeof type !== "string") {
-                moduleInfo = Montage.getInfoForObject(type);
+                var moduleInfo = Montage.getInfoForObject(type);
                 typeName = moduleInfo.objectName;
             } else {
                 typeName = type;

@@ -6,17 +6,18 @@
             "objectDescriptor": {"@": "MovieDescriptor"},
             "objectMapping": {
                 "rules": {
-                    "id": {"<-": "id"},
-                    "isFeatured": {"<-": "isFeatured"},
+                    "id": {"<->": "id"},
+                    "isFeatured": {"<->": "isFeatured"},
                     "releaseDate": {
-                        "<-": "releaseDate",
+                        "<->": "releaseDate",
                         "converter": {"@": "dateConverter"}
                     },
-                    "title": {"<-": "title"}
+                    "title": {"<->": "title"},
+                    "tomatometer": {"<->": "tomatometer"}
                 }
             },
             "requisitePropertyNames": [
-                "id", "isFeatured", "releaseDate", "title"
+                "id", "isFeatured", "releaseDate", "title", "tomatometer"
             ]
         }
     },
