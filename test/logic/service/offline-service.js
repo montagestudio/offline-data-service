@@ -53,6 +53,41 @@ exports.OfflineService = RawDataService.specialize(/** @lends HttpService.protot
 		}
 	},
 
+
+	/**
+	 * Fetches the 'lastFetched' operations from the database. This is used for testing only. 
+	 * 
+	 * 
+	 * @param {Map|WeakMap} - the operations map
+	 * @returns {Promise}
+	 */
+	readStoredFetchOperations: {
+		value: function () {
+			var	service = this.offlineService;
+			if (!this.offlineService) {
+				return this.nullPromise;
+			}
+			return new Promise(function (resolve, reject) {
+                service._db.then(function (db) {
+                    db.open().then(function () {
+                        service.operationTable(db).filter(function (operation) {
+							return !operation.operation && operation.lastFetched;
+						}).toArray(function (fetchOperations) {
+                            resolve(fetchOperations);
+                        }).catch(function (e) {
+                            console.error(e);
+                            reject(e);
+                        });
+                    });
+                }).catch(function (e) { 
+                    console.error(e);
+                    reject(e);
+                });
+            });
+		}
+	},
+
+	
 	/**
 	 * Convenience method for calling deleteOfflineOperations on the offline
 	 * service.  Returns a null promise if the offline service is not defined,

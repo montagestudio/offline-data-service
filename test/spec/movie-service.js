@@ -285,4 +285,50 @@ describe("A Movie Service", function() {
 		})
 	});
 
+
+	function countByDataID(operations) {
+		return operations.reduce(function (counts, operation) {
+			if (!counts[operation.dataID]) {
+				counts[operation.dataID] = 0;
+			}
+			counts[operation.dataID]++;
+			return counts;
+		}, {});
+	}
+
+	it("can merge lastFetched operations", function (done) {
+		var service = DataService.mainService.childServiceForType(Movie),
+			operationCountByDataID;
+		DataService.mainService.fetchData(Movie).then(function (movies) {
+			service.readStoredFetchOperations().then(function (operations) {
+				expect(Array.isArray(operations)).toBe(true);
+				operationCountByDataID = countByDataID(operations);
+				expect(operationCountByDataID["1"]).toBe(1);
+				expect(operationCountByDataID["2"]).toBe(1);
+				expect(operationCountByDataID["3"]).toBe(1);
+				expect(operationCountByDataID["4"]).toBe(1);
+				done();
+			});
+		});
+	});
+
+	it("can cull offlineOperations", function (done) {
+		var service = DataService.mainService.childServiceForType(Movie),
+			operationCountByDataID;
+		service._deleteMovieOnline({id: 1}).then(function () {
+			return DataService.mainService.fetchData(Movie);
+		}).then(function (movies) {
+			expect(Array.isArray(movies));
+			expect(movies.length).toBe(2);
+			return service.readStoredFetchOperations();
+		}).then(function (operations) {
+			operationCountByDataID = countByDataID(operations);
+			expect(operationCountByDataID["1"]).toBe(undefined);
+			expect(operationCountByDataID["2"]).toBe(1);
+			expect(operationCountByDataID["3"]).toBe(1);
+			expect(operationCountByDataID["4"]).toBe(1);
+			done();
+		});
+	});
+
 });
