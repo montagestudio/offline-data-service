@@ -506,7 +506,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                 myDB.open().then(function () {
                     var table = self.tableNamed(myDB, selector.type),
                         whereProperties = (criteria && criteria.parameters) ? Object.keys(criteria.parameters) : undefined;
-                    
+
                     if (whereProperties && whereProperties.length) {
                         var wherePromise,
                             resultPromise,
@@ -622,9 +622,12 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                 clonedArray = [],
                 updateOperationArray = [],
                 cookedSelector, criteria,
-                primaryKey;
+                primaryKey, db;
 
-            return this._db.then(function (db) {
+            return this._db.then(function (theDB) {
+                db = theDB;
+                return self._deleteExistingFetchOperations(db, selector.type, rawDataArray);
+            }).then(function () {
                 var tableName = selector.type,
                     table = self.tableNamed(db, tableName),
                     lastUpdated = Date.now(),
@@ -636,7 +639,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                 primaryKey = table.schema.primKey.name;
                 rawDataStream.query = selector;
 
-                //Make a clone of the array and create the record to track the online Last Updated date
+                // Make a clone of the array and create the record to track the online Last Updated date
                 for (i = 0, countI = rawDataArray.length; i < countI; i++) {
                     if ((iRawData = rawDataArray[i])) {
                         clonedArray.push(iRawData);
@@ -697,6 +700,25 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
         }
     },
 
+    _deleteExistingFetchOperations: {
+        value: function (db, tableName, rawData) {
+            var table = this.tableNamed(db, tableName),
+                operationtableName = this.operationTableName,
+                operationTable = this.tableNamed(db, operationtableName),
+                primaryKey = table.schema.primKey.name,
+                ids = rawData.map(function (item) {
+                    return item[primaryKey];
+                }),
+                typePropertyName = this.typePropertyName,
+                lastFetchedPropertyName = this.lastFetchedPropertyName;
+
+            return operationTable.where("dataID").anyOf(ids).and(function (object) {
+                return object.hasOwnProperty(lastFetchedPropertyName) &&
+                    object[typePropertyName] === tableName;
+            }).delete();
+        }
+    },
+
     readOfflineOperations: {
         value: function (/* operationMapToService */) {
             var self = this;
@@ -733,15 +755,13 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
             }).then(function (db) {
                 var table = db[selector.type],
                     operationTable = self.operationTable(indexedDB);
-                
+
                 //Transaction:
                 //Objects to put:
                 //      rawDataArray
                 //      updateOperationArray
                 //Objects to delete:
                 //      offlineObjectsToClear in table and operationTable
-            
-                
 
                 return db.transaction('rw', table, operationTable, function () {
                     return Dexie.Promise.all([
@@ -1065,7 +1085,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                         }).catch(function(e) {
                             reject(e);
                             // console.log("tableName:failed to add Offline Data",e)
-                            console.error(table.name,": failed to updateData for ",objects.length," objects with error",e);
+                            console.error(table.name,": failed to deleteData for ", objects.length, " objects with error", e);
                         });
                     });
                 }).catch(function(e) {
