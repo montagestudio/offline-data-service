@@ -626,7 +626,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
 
             return this._db.then(function (theDB) {
                 db = theDB;
-                return self._deleteExistingFetchOperations(db, selector.type, rawDataArray);
+                return self._deleteExistingFetchOperations(db, selector.type);
             }).then(function () {
                 var tableName = selector.type,
                     table = self.tableNamed(db, tableName),
@@ -701,21 +701,16 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
     },
 
     _deleteExistingFetchOperations: {
-        value: function (db, tableName, rawData) {
-            var table = this.tableNamed(db, tableName),
-                operationtableName = this.operationTableName,
+        value: function (db, tableName) {
+            var operationtableName = this.operationTableName,
                 operationTable = this.tableNamed(db, operationtableName),
-                primaryKey = table.schema.primKey.name,
-                ids = rawData.map(function (item) {
-                    return item[primaryKey];
-                }),
                 typePropertyName = this.typePropertyName,
-                lastFetchedPropertyName = this.lastFetchedPropertyName;
-
-            return operationTable.where("dataID").anyOf(ids).and(function (object) {
-                return object.hasOwnProperty(lastFetchedPropertyName) &&
-                    object[typePropertyName] === tableName;
-            }).delete();
+                lastFetchedPropertyName = this.lastFetchedPropertyName,
+                filtered = operationTable.toCollection().filter(function (object) {
+                    return  object.hasOwnProperty(lastFetchedPropertyName) &&
+                        object[typePropertyName] === tableName;
+                });
+            return filtered.delete();
         }
     },
 
