@@ -45,43 +45,24 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
     /**
      * @type {string}
      */
-    _is_safari_10_1_upgrade_issue_fixed: {
-        value: "is_IOS_10_3_upgrade_issue_fixed"
-    },
-
-    _faulty_safari_versions: {
-        get: function () {
-            return [
-                ["iPhone OS 10_3_0", "AppleWebKit/603.1.30"],
-                ["iPhone OS 10_3_1", "AppleWebKit/603.1.30"],
-                ["Mac OS X 10_12_4", "AppleWebKit/603.1.30"]
-            ]
-        }
-    },
-
-    _isFaultySafariVersion: {
-        get: function () {
-            return this._faulty_safari_versions.some(function (userAgentStrings) {
-                return userAgentStrings.every(function (userAgentString) {
-                    return navigator.userAgent.indexOf(userAgentString) !== -1;
-                });
-            });
-        }
+    _isOperationsTableClearedKey: {
+        value: "is_operations_table_cleared"
     },
 
     _isIndexedDBMigrated: {
         value: function (name) {
-            return !!localStorage.getItem(name + "." + this._is_safari_10_1_upgrade_issue_fixed);
+            return !!localStorage.getItem(name + "." + this._isOperationsTableClearedKey);
         }
     },
 
-    _checkAndFixSafariTenOneUpgradeIssue: {
+    _checkAndClearOperationsTable: {
         value: function (name) {
             var self = this;
             return this._databaseExists(name).then(function (isInitialized) {
-                return  isInitialized &&
-                        self._isFaultySafariVersion &&
-                        !self._isIndexedDBMigrated(name) ? self._recreateDatabase(name) : Promise.resolve(null);
+                return isInitialized && !self._isIndexedDBMigrated(name) ? self._recreateDatabase(name, true) : Promise.resolve(null);
+            }).then(function () {
+                localStorage.setItem(name + "." + self._isOperationsTableClearedKey, true);
+                return null;
             });
         }
     },
@@ -93,18 +74,15 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
     },
 
     _recreateDatabase: {
-        value: function recreateDatabase (name) {
+        value: function recreateDatabase (name, omitOperations) {
             var self = this,
                 tempName = name + "_tmp";
-            return this._copyDatabase(name, tempName).then(function() {
+            return this._copyDatabase(name, tempName, omitOperations).then(function () {
                 return Dexie.delete(name);
-            }).then(function(){
+            }).then(function() {
                 return self._copyDatabase(tempName, name);
             }).then(function(){
                 return Dexie.delete(tempName);
-            }).then(function () {
-                localStorage.setItem(name + "." + self._is_safari_10_1_upgrade_issue_fixed, true);
-                return null;
             });
         }
     },
@@ -140,7 +118,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
     },
 
     _copyDatabase: {
-        value: function copyDatabase(fromDbName, toDbName) {
+        value: function copyDatabase(fromDbName, toDbName, omitOperations) {
             var self = this,
                 dexie = new Dexie(fromDbName);
             return dexie.open().then(function (db) {
@@ -153,9 +131,13 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
                     // dbCopy is now successfully created with same version and schema as source db.
                     // Now also copy the data
                     return Promise.all(db.tables.map(function (table) {
-                        return table.toArray().then(function (rows) {
-                            return dbCopy.table(table.name).bulkAdd(rows);
-                        });
+                        if (table.name === self.operationTableName && omitOperations) {
+                            return dbCopy.table(table.name);
+                        } else {
+                            return table.toArray().then(function (rows) {
+                                return dbCopy.table(table.name).bulkAdd(rows);
+                            });
+                        }
                     }));
                 }).catch(function (error) {
                     console.log("Error copying database (", error, ")");
@@ -191,7 +173,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
         value: function(name, version, schema) {
             var self = this;
             if (!this._db) {
-                this._db = this._checkAndFixSafariTenOneUpgradeIssue(name).then(function() {
+                this._db = this._checkAndClearOperationsTable(name).then(function() {
                     return self._initWithName(name, version, schema);
                 });
             }
