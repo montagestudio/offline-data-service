@@ -1118,6 +1118,14 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize(/** 
         value: function(offlinePrimaryKey,onlinePrimaryKey, type, service) {
             return OfflineDataService.replaceOfflinePrimaryKey(offlinePrimaryKey,onlinePrimaryKey, type, service);
         }
+    },
+
+    deleteDBWithName: {
+        value: function (name) {
+            return this._databaseExists(name).then(function (exists) {
+                return exists ? Dexie.delete(name) : Promise.resolve(null);
+            });
+        }
     }
 
 }, {
