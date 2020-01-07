@@ -226,7 +226,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
                     if (dbTable) {
                         //That table is defined, now let's compare primaryKey and indexes
                         dbSchema = dbTable.schema;
-                        if (dbSchema.primKey.keyPath !== tablePrimaryKey) {
+                        if (dbSchema.primKey.keyPath !== tablePrimaryKey && dbSchema.primKey.src !== tablePrimaryKey) {
                             //Existing table has different primaryKey, needs new version
                             shouldUpgradeToNewVersion = true;
                         }
