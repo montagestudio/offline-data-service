@@ -51,7 +51,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
 
     _isIndexedDBMigrated: {
         value: function (name) {
-            return !!localStorage.getItem(name + "." + this._isOperationsTableClearedKey);
+            return (!global.localStorage || global.localStorage.getItem(name + "." + this._isOperationsTableClearedKey));
         }
     },
 
@@ -61,7 +61,9 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
             return this._databaseExists(name).then(function (isInitialized) {
                 return isInitialized && !self._isIndexedDBMigrated(name) ? self._recreateDatabase(name, true) : Promise.resolve(null);
             }).then(function () {
-                localStorage.setItem(name + "." + self._isOperationsTableClearedKey, true);
+                if (global.localStorage) {
+                    global.localStorage.setItem(name + "." + self._isOperationsTableClearedKey, true);
+                }
                 return null;
             });
         }
