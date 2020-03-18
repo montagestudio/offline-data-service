@@ -208,7 +208,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
                 table, tableSchema, dbTable, dbSchema, dbIndexes,
                 shouldUpgradeToNewVersion = false,
                 newDbSchema = this._initializeNewSchemaDefinition(),
-                schemaDefinition, tableIndexes, tablePrimaryKey;
+                schemaDefinition, tableIndexes, tablePrimaryKey, normalizedPrimaryKey;
 
             this.schema = schema;
             //We automatically create an extra table that will track offline operations the record was last updated
@@ -223,12 +223,13 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
                     tableSchema = schema[table];
                     tableIndexes = tableSchema.indexes;
                     tablePrimaryKey = tableSchema.primaryKey;
+                    normalizedPrimaryKey = tablePrimaryKey === "++" ? "" : tablePrimaryKey;
                     dbTable = self.tableNamed(db, table);
 
                     if (dbTable) {
                         //That table is defined, now let's compare primaryKey and indexes
                         dbSchema = dbTable.schema;
-                        if (dbSchema.primKey.keyPath !== tablePrimaryKey && dbSchema.primKey.src !== tablePrimaryKey) {
+                        if (dbSchema.primKey.keyPath !== normalizedPrimaryKey && dbSchema.primKey.src !== normalizedPrimaryKey) {
                             //Existing table has different primaryKey, needs new version
                             shouldUpgradeToNewVersion = true;
                         }
@@ -529,7 +530,6 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
 
     fetchData: {
         value: function (selector, stream) {
-
             var criteria = selector.criteria,
                 orderings = selector.orderings,
                 self = this;
