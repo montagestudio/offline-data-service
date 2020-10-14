@@ -49,9 +49,11 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
         value: "is_operations_table_cleared"
     },
 
-    _isIndexedDBMigrated: {
+    _operationsTableNeedsMigration: {
         value: function (name) {
-            return (!global.localStorage || global.localStorage.getItem(name + "." + this._isOperationsTableClearedKey));
+            var isServiceWorker = global.importScripts !== undefined,
+                hasLocalStorage = !!global.localStorage;
+            return !isServiceWorker && hasLocalStorage && !global.localStorage.getItem(name + "." + this._isOperationsTableClearedKey);
         }
     },
 
@@ -59,7 +61,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
         value: function (name) {
             var self = this;
             return this._databaseExists(name).then(function (isInitialized) {
-                return isInitialized && !self._isIndexedDBMigrated(name) ? self._recreateDatabase(name, true) : Promise.resolve(null);
+                return isInitialized && self._operationsTableNeedsMigration(name) ? self._recreateDatabase(name, true) : Promise.resolve(null);
             }).then(function () {
                 if (global.localStorage) {
                     global.localStorage.setItem(name + "." + self._isOperationsTableClearedKey, true);
