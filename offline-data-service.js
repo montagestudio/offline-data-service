@@ -547,13 +547,16 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
             this._db.then(function (myDB) {
                 myDB.open().then(function () {
                     var table = self.tableNamed(myDB, selector.type),
-                        whereProperties = (criteria && criteria.parameters) ? Object.keys(criteria.parameters) : undefined;
+                        parameters = criteria && criteria.parameters || criteria,
+                        whereProperties = parameters ? Object.keys(parameters) : undefined;
+
+
 
                     if (whereProperties && whereProperties.length) {
                         var wherePromise,
                             resultPromise,
                             whereProperty = whereProperties.shift(),
-                            whereValue = criteria.parameters[whereProperty];
+                            whereValue = parameters[whereProperty];
 
                         if (whereProperties.length > 0) {
                             //db.table1.where("key1").between(8,12).and(function (x) { return x.key2 >= 3 && x.key2 < 18; }).toArray();
@@ -565,7 +568,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
                                 var result = true;
                                 for (var i = 0, iKey, iValue, iKeyMatchValue, iOrValue;
                                     (iKey = whereProperties[i]); i++) {
-                                    iValue = criteria.parameters[iKey];
+                                    iValue = parameters[iKey];
                                     iKeyMatchValue = false;
                                     if (Array.isArray(iValue)) {
                                         iOrValue = false;
