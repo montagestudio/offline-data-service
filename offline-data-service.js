@@ -214,7 +214,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
 
             this.schema = schema;
             //We automatically create an extra table that will track offline operations the record was last updated
-            // If the database exists, we must open it before we  
+            // If the database exists, we must open it before we
             // can check whether a particular table exists
             return this._databaseExists(name).then(function (exists) {
                 return exists ? db.open().then(function () {
@@ -551,7 +551,6 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
                         whereProperties = parameters ? Object.keys(parameters) : undefined;
 
 
-
                     if (whereProperties && whereProperties.length) {
                         var wherePromise,
                             resultPromise,
@@ -587,7 +586,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
                                     }
                                 }
                                 return result;
-                            });
+                            })
                         } else {
                             if (Array.isArray(whereValue)) {
                                 resultPromise = table.where(whereProperty).anyOf(whereValue);
@@ -619,6 +618,9 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
                             stream.addData(results);
                             stream.dataDone();
 
+                        }).catch(function (e) {
+                            console.error("OfflineDataService.fetchData failed for type (" +selector.type + ")");
+                            console.error(e);
                         });
 
                     } else {
@@ -970,7 +972,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
                         return table.put(record);
                     }).catch(function (e) {
                         // console.log("tableName:failed to addO ffline Data",e)
-                        console.error(table.name, ": failed to delete record with primaryKwy ", currentPrimaryKey, e);
+                        console.error(table.name, ": failed to delete record with primaryKey ", currentPrimaryKey, e);
                     });
                 });
             }).catch(function (e) {
@@ -1547,6 +1549,41 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
             });
             return Promise.all(promises).then(function () {
                 console.log("Databases Deleted");
+            });
+        }
+    },
+
+    clearAllTables: {
+        value: function () {
+            var self = this,
+                databases = [];
+            
+            this._registeredOfflineDataServiceByName.forEach(function (value, key) {
+                databases.push(key);
+            });
+            return self._clearNextDatabase(databases);
+        }
+    },
+
+    _clearNextDatabase: {
+        value: function (databaseNames, index) {
+            var self = this,
+                name;
+            index = index || 0;
+            name = databaseNames[index];
+            return this._clearDatabase(new Dexie(name)).then(function () {
+                index++;
+                return index < databaseNames.length ? self._clearNextDatabase(databaseNames, index) : null;
+            });
+        }
+    },
+
+    _clearDatabase: {
+        value: function (database) {
+            return database.open().then(function (db) {
+                return Promise.all(db.tables.map(function (table) {
+                    return table.clear();
+                }));
             });
         }
     }

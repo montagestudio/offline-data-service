@@ -105,4 +105,48 @@ describe("An OfflineDataService", function() {
         })
     });
 
+
+    it("can clear all tables", function (done) {
+        var fooQuery = {type: {name:"Foo"}, criteria: {}},
+            barQuery = {type: {name:"Bar"}, criteria: {}},
+            error = null;
+        
+        
+            var newSchema = {
+                "Bar": {
+                    primaryKey: "id",
+                    indexes: ["id"],
+                    versionUpgradeLogic: null
+                },
+                "Foo": {
+                    primaryKey: "id",
+                    indexes: ["id"],
+                    versionUpgradeLogic: null
+                }
+            },
+            // fooQuery = {type: {name:"Foo"}, criteria: {}},
+            // barQuery = {type: {name:"Bar"}, criteria: {}},
+            service = new FooService(),
+            error = null;
+            service.initWithSchema(newSchema);
+
+
+        OfflineDataService.clearAllTables().then(function () {
+            return service.fetchData(fooQuery);
+        }).then(function (data) {
+            expect(data.length).toBe(0)
+            return service.fetchData(barQuery);
+        }).then(function (data) {
+            expect(data.length).toBe(0);
+            return null;
+        }).catch(function (e) {
+            error = e;
+            console.error(e);
+        }).finally(function () {
+            expect(error).toBe(null);
+            done();
+        });
+
+    });
+
 });
