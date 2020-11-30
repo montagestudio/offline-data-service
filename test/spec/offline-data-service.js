@@ -19,11 +19,11 @@ describe("An OfflineDataService", function() {
     
     it("can create tables for schema", function (done) {
         var error = null,
-            query = {type: {name:"Foo"}, criteria: {}};
-        service.initWithSchema();
-        // return wait().then(function () {
-        //     return service.database;
-        service.database.then(function (db) {
+            query = {type: {name:"Foo"}, criteria: {}},
+            database;
+
+        service.initWithSchema().then(function (db) {
+            database = db;
             //db is an instance of Dexie
             expect(db).toBeDefined();
             expect(db.tables).toBeDefined();
@@ -43,6 +43,7 @@ describe("An OfflineDataService", function() {
             error = e;
         }).finally(function () {
             expect(error).toBe(null);
+            database.close();
             done();
         })
     });
@@ -63,9 +64,11 @@ describe("An OfflineDataService", function() {
         fooQuery = {type: {name:"Foo"}, criteria: {}},
         barQuery = {type: {name:"Bar"}, criteria: {}},
         service = new FooService(),
-        error = null;
-        service.initWithSchema(newSchema);
-        service.database.then(function (db) {
+        error = null,
+        database;
+
+        service.initWithSchema(newSchema).then(function (db) {
+            database = db;
             //db is an instance of Dexie
             expect(db).toBeDefined();
             expect(db.tables).toBeDefined();
@@ -101,6 +104,7 @@ describe("An OfflineDataService", function() {
             error = e;
         }).finally(function () {
             expect(error).toBe(null);
+            database.close();
             done();
         })
     });
@@ -109,7 +113,8 @@ describe("An OfflineDataService", function() {
     it("can clear all tables", function (done) {
         var fooQuery = {type: {name:"Foo"}, criteria: {}},
             barQuery = {type: {name:"Bar"}, criteria: {}},
-            error = null;
+            error = null,
+            database;
         
         
             var newSchema = {
@@ -128,10 +133,11 @@ describe("An OfflineDataService", function() {
             // barQuery = {type: {name:"Bar"}, criteria: {}},
             service = new FooService(),
             error = null;
-            service.initWithSchema(newSchema);
 
-
-        OfflineDataService.clearAllTables().then(function () {
+        service.initWithSchema(newSchema).then(function (db) {
+            database = db;
+            return OfflineDataService.clearAllTables();
+        }).then(function () {
             return service.fetchData(fooQuery);
         }).then(function (data) {
             expect(data.length).toBe(0)
@@ -144,6 +150,7 @@ describe("An OfflineDataService", function() {
             console.error(e);
         }).finally(function () {
             expect(error).toBe(null);
+            database.close();
             done();
         });
 

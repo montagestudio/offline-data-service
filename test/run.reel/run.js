@@ -11,8 +11,8 @@ exports.Run = Component.specialize(/** @lends Run.prototype */ {
         // Require the Jasmine "specs" defining the test here.
         // For maintainability please keep these in alphabetical order.
         value: [
-            require("spec/offline-data-service"),
-            require("spec/movie-service")
+            require("spec/movie-service"),
+            require("spec/offline-data-service")
         ]
     },
 

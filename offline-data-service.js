@@ -61,7 +61,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
         value: function (name) {
             var self = this;
             return this._databaseExists(name).then(function (isInitialized) {
-                return isInitialized && self._operationsTableNeedsMigration(name) ? self._recreateDatabase(name, true) : Promise.resolve(null);
+                return isInitialized && self._operationsTableNeedsMigration(name) ? self._recreateDatabase(name, ["Operation"]) : Promise.resolve(null);
             }).then(function () {
                 if (global.localStorage) {
                     global.localStorage.setItem(name + "." + self._isOperationsTableClearedKey, true);
@@ -77,14 +77,16 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
         }
     },
 
+
     _recreateDatabase: {
-        value: function recreateDatabase(name, omitOperations, newSchema) {
+        value: function recreateDatabase(name, tablesToTruncate, newSchema) {
             var self = this,
                 tempName = name + "_tmp";
-            return this._copyDatabase(name, tempName, omitOperations, newSchema).then(function () {
+
+            return this._copyDatabaseWithName(name, tempName, tablesToTruncate, newSchema).then(function () {
                 return Dexie.delete(name);
             }).then(function () {
-                return self._copyDatabase(tempName, name);
+                return self._copyDatabaseWithName(tempName, name);
             }).then(function () {
                 return Dexie.delete(tempName);
             });
@@ -121,10 +123,20 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
         }
     },
 
-    _copyDatabase: {
-        value: function copyDatabase(fromDbName, toDbName, omitOperations, newSchema) {
+    _copyDatabaseWithName: {
+        value: function copyDatabase(fromDbName, toDbName, tablesToTruncate, newSchema) {
             var self = this,
-                dexie = new Dexie(fromDbName);
+                dexie = new Dexie(fromDbName),
+                shouldClearAllData = tablesToTruncate === -1,
+                currentDBPromise;
+
+
+            if (Array.isArray(tablesToTruncate)) {
+                tablesToTruncate = new Set(tablesToTruncate);
+            } else if (!(tablesToTruncate instanceof Set)) {
+                tablesToTruncate = new Set();
+            }
+
             return dexie.open().then(function (db) {
                 var schema = newSchema || self._makeSchema(db.tables),
                     dbCopy = new Dexie(toDbName);
@@ -136,7 +148,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
                     // Now also copy the data
 
                     return Promise.all(db.tables.map(function (table) {
-                        if (table.name === self.operationTableName && omitOperations) {
+                        if (shouldClearAllData || tablesToTruncate.has(table.name)) {
                             return dbCopy.table(table.name);
                         } else {
                             return table.toArray().then(function (rows) {
@@ -1189,6 +1201,14 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
         }
     },
 
+    clearDBWithName: {
+        value: function (name) {
+            return this._databaseExists(name).then(function (exists) {
+                return exists ? OfflineDataService.clearDatabaseWithName(name) : Promise.resolve(null);
+            });
+        }
+    },
+
     deleteDBWithName: {
         value: function (name) {
             return this._databaseExists(name).then(function (exists) {
@@ -1545,10 +1565,10 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
     deleteAllDBs: {
         value: function () {
             var promises = this._registeredOfflineDataServiceByName.map(function (value, key) {
-                return Dexie.delete(key);
+                return value.deleteDBWithName(key);
             });
             return Promise.all(promises).then(function () {
-                console.log("Databases Deleted");
+                console.log("[OfflineDataService] All Databases Deleted");
             });
         }
     },
@@ -1571,22 +1591,24 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
                 name;
             index = index || 0;
             name = databaseNames[index];
-            return this._clearDatabase(new Dexie(name)).then(function () {
+            return this.clearDatabaseWithName(name).then(function () {
                 index++;
                 return index < databaseNames.length ? self._clearNextDatabase(databaseNames, index) : null;
             });
         }
     },
 
-    _clearDatabase: {
-        value: function (database) {
-            return database.open().then(function (db) {
-                return Promise.all(db.tables.map(function (table) {
-                    return table.clear();
-                }));
+    clearDatabaseWithName: {
+        value: function (databaseName) {
+            var offlineDataService = this._registeredOfflineDataServiceByName.get(databaseName);
+
+            return offlineDataService._recreateDatabase(databaseName, -1).then(function () {
+                console.log("Cleared Database (" + databaseName + ")");
+                return null;
             });
         }
     }
+
 });
 
 global.deleteAllDBs = exports.OfflineDataService.deleteAllDBs.bind(exports.OfflineDataService);
