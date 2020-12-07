@@ -796,7 +796,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
                         self.operationTable(db).where(self.operationPropertyName).anyOf("create", "update", "delete").toArray(function (offlineOperations) {
                             resolve(offlineOperations);
                         }).catch(function (e) {
-                            console.error(selector.type + ": readOfflineOperations failed"); // Error selector is not defined.
+                            console.error(self.name + ": readOfflineOperations failed"); // Error selector is not defined.
                             console.error(e);
                             reject(e);
                         });
