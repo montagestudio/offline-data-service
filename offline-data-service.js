@@ -559,7 +559,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
             this._db.then(function (myDB) {
                 myDB.open().then(function () {
                     var table = self.tableNamed(myDB, selector.type),
-                        parameters = criteria && criteria.parameters || criteria,
+                        parameters = criteria instanceof Criteria ? criteria.parameters : criteria,
                         whereProperties = parameters ? Object.keys(parameters) : undefined;
 
 
