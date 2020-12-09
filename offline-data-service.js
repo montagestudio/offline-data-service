@@ -562,85 +562,91 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
                         parameters = criteria instanceof Criteria ? criteria.parameters : criteria,
                         whereProperties = parameters ? Object.keys(parameters) : undefined;
 
-
-                    if (whereProperties && whereProperties.length) {
-                        var wherePromise,
-                            resultPromise,
-                            whereProperty = whereProperties.shift(),
-                            whereValue = parameters[whereProperty];
-
-                        if (whereProperties.length > 0) {
-                            //db.table1.where("key1").between(8,12).and(function (x) { return x.key2 >= 3 && x.key2 < 18; }).toArray();
-
-                            wherePromise = Array.isArray(whereValue) ? table.where(whereProperty).anyOf(whereValue) :
-                                table.where(whereProperty).equals(whereValue);
-
-                            resultPromise = wherePromise.and(function (aRecord) {
-                                var result = true;
-                                for (var i = 0, iKey, iValue, iKeyMatchValue, iOrValue;
-                                    (iKey = whereProperties[i]); i++) {
-                                    iValue = parameters[iKey];
-                                    iKeyMatchValue = false;
-                                    if (Array.isArray(iValue)) {
-                                        iOrValue = false;
-                                        for (var j = 0, jValue;
-                                            (jValue = iValue[j]); j++) {
-                                            if (aRecord[iKey] === jValue) {
-                                                if (!iKeyMatchValue) iKeyMatchValue = true;
+                    myDB.transaction("r", table, function () {
+                        if (whereProperties && whereProperties.length) {
+                            var wherePromise,
+                                resultPromise,
+                                whereProperty = whereProperties.shift(),
+                                whereValue = parameters[whereProperty];
+    
+                            if (whereProperties.length > 0) {
+                                //db.table1.where("key1").between(8,12).and(function (x) { return x.key2 >= 3 && x.key2 < 18; }).toArray();
+    
+                                wherePromise = Array.isArray(whereValue) ? table.where(whereProperty).anyOf(whereValue) :
+                                                                           table.where(whereProperty).equals(whereValue);
+    
+                                return resultPromise = wherePromise.and(function (aRecord) {
+                                    if (selector.type === "HazardReference") {
+                                        console.log("WherePromise.and", results);
+                                    }
+                                    var result = true;
+                                    for (var i = 0, iKey, iValue, iKeyMatchValue, iOrValue;
+                                        (iKey = whereProperties[i]); i++) {
+                                        iValue = parameters[iKey];
+                                        iKeyMatchValue = false;
+                                        if (Array.isArray(iValue)) {
+                                            iOrValue = false;
+                                            for (var j = 0, jValue;
+                                                (jValue = iValue[j]); j++) {
+                                                if (aRecord[iKey] === jValue) {
+                                                    if (!iKeyMatchValue) iKeyMatchValue = true;
+                                                }
                                             }
+                                        } else {
+                                            iKeyMatchValue = aRecord[iKey] === iValue;
                                         }
-                                    } else {
-                                        iKeyMatchValue = aRecord[iKey] === iValue;
+    
+                                        if (!(result = result && iKeyMatchValue)) {
+                                            break;
+                                        }
                                     }
-
-                                    if (!(result = result && iKeyMatchValue)) {
-                                        break;
-                                    }
-                                }
-                                return result;
-                            })
-                        } else {
-                            if (Array.isArray(whereValue)) {
-                                resultPromise = table.where(whereProperty).anyOf(whereValue);
+                                    return result;
+                                })
                             } else {
-                                resultPromise = table.where(whereProperty).equals(whereValue);
-                            }
-                        }
-                        resultPromise.toArray(function (results) {
-                            if (orderings) {
-                                var expression = "";
-                                //Build combined expression
-                                for (var i = 0, iDataOrdering, iExpression;
-                                    (iDataOrdering = orderings[i]); i++) {
-                                    iExpression = iDataOrdering.expression;
-
-                                    if (expression.length)
-                                        expression += ".";
-
-                                    expression += "sorted{";
-                                    expression += iExpression;
-                                    expression += "}";
-                                    if (iDataOrdering.order === DESCENDING) {
-                                        expression += ".reversed()";
-                                    }
+                                if (Array.isArray(whereValue)) {
+                                    resultPromise = table.where(whereProperty).anyOf(whereValue);
+                                } else {
+                                    resultPromise = table.where(whereProperty).equals(whereValue);
                                 }
-                                results = evaluate(expression, results);
                             }
-
-                            stream.addData(results);
-                            stream.dataDone();
-                        }).catch(function (e) {
-                            console.error("OfflineDataService.fetchData failed for type (" + selector.type + ")");
-                            console.error(e);
-                        });
-
-                    } else {
-                        table.toArray().then(function (results) {
-                            stream.addData(results);
-                            stream.dataDone();
-                        });
-                    }
-
+                            return resultPromise.toArray(function (results) {
+                                if (orderings) {
+                                    var expression = "";
+                                    //Build combined expression
+                                    for (var i = 0, iDataOrdering, iExpression;
+                                        (iDataOrdering = orderings[i]); i++) {
+                                        iExpression = iDataOrdering.expression;
+    
+                                        if (expression.length)
+                                            expression += ".";
+    
+                                        expression += "sorted{";
+                                        expression += iExpression;
+                                        expression += "}";
+                                        if (iDataOrdering.order === DESCENDING) {
+                                            expression += ".reversed()";
+                                        }
+                                    }
+                                    results = evaluate(expression, results);
+                                }
+    
+                                stream.addData(results);
+                                stream.dataDone();
+                            }).catch(function (e) {
+                                console.error("OfflineDataService.fetchData failed for type (" + selector.type + ")");
+                                console.error(e);
+                            });
+    
+                        } else {
+                            return table.toArray().then(function (results) {
+                                stream.addData(results);
+                                stream.dataDone();
+                            }).catch(function (e) {
+                                console.error("OfflineDataService.fetchData failed for type (" + selector.type + ")");
+                                stream.dataError(e);
+                            })
+                        }
+                    });
                 }).catch('NoSuchDatabaseError', function (e) {
                     // Database with that name did not exist
                     stream.dataError(e);
@@ -793,13 +799,24 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
             return new Promise(function (resolve, reject) {
                 self._db.then(function (db) {
                     db.open().then(function () {
-                        self.operationTable(db).where(self.operationPropertyName).anyOf("create", "update", "delete").toArray(function (offlineOperations) {
-                            resolve(offlineOperations);
-                        }).catch(function (e) {
-                            console.error(self.name + ": readOfflineOperations failed"); // Error selector is not defined.
-                            console.error(e);
-                            reject(e);
+                        var operationTable = self.operationTable(db);
+                        return db.transaction('r', operationTable, function () {
+                            console.log("OfflineDataService.readOfflineOperations", self.name);
+                            Dexie.Promise.race(self.operationTable(db).where(self.operationPropertyName).anyOf("create", "update", "delete").toArray(function (offlineOperations) {
+                                resolve(offlineOperations);
+                            }).catch(function (e) {
+                                console.error(self.name + ": readOfflineOperations failed"); // Error selector is not defined.
+                                console.error(e);
+                                reject(e);
+                            }), new Promise(function (resolve, reject) {
+                                setTimeout(function () {
+                                    resolve(null);
+                                }, 500);
+                            }));
                         });
+                    }).catch(function (e) {
+                        console.error(self.name + ": readOfflineOperations failed"); // Error selector is not defined.
+                        reject(e);
                     });
                 }).catch(function (e) {
                     console.error(e);
@@ -941,7 +958,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
             } else {
                 typeName = type;
             }
-            return new Promise(function (resolve, reject) {
+            return new Dexie.Promise(function (resolve, reject) {
                 self._db.then(function (myDB) {
                     var table = self.tableNamed(myDB, typeName),
                         operationTable = self.operationTable(myDB),
@@ -989,7 +1006,9 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
                                     operations.push(iOperation);
                                 }
                             }
-
+                            if (typeName === "HazardReference") {
+                                console.log("ODS.bulkAdd", clonedObjects.slice(), operations.slice());
+                            }
                             return Dexie.Promise.all([table.bulkAdd(clonedObjects), operationTable.bulkAdd(operations)]);
 
                         }).catch(function (error) {
@@ -1158,6 +1177,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
             } else {
                 type = type;
             }
+            console.log("OfflineDataService.deleteData", moduleInfo.objectName);
 
             return new Promise(function (resolve, reject) {
                 self._db.then(function (myDB) {
@@ -1180,6 +1200,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
                             for (var i = 0, countI = objects.length, iRawData, iOperation, iPrimaryKey; i < countI; i++) {
                                 if ((iRawData = objects[i])) {
                                     iPrimaryKey = iRawData[primaryKey];
+                                    console.log("OfflineDataService.deleteData", iPrimaryKey, type, iRawData);
                                     updateDataPromises.push(table.delete(iPrimaryKey, iRawData));
 
                                     //Create the record to track of last modified date
@@ -1198,6 +1219,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
                         }).catch(function (error) {
                             console.error("DexieTransactionError.deleteData", error);
                         }).then(function () {
+                            console.log("OfflineDataService.deleteData DONE");
                             //Once this succeeded, we need to add our temporary primary keys bookkeeping:
                             //Register potential temporary primaryKeys
                             self.deleteOfflinePrimaryKeyDependenciesForData(objects, type, primaryKey);
