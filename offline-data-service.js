@@ -609,7 +609,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
                                     resultPromise = table.where(whereProperty).equals(whereValue);
                                 }
                             }
-                            return resultPromise.toArray(function (results) {
+                            return resultPromise.toArray().then(function (results) {
                                 if (orderings) {
                                     var expression = "";
                                     //Build combined expression
@@ -632,6 +632,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
     
                                 stream.addData(results);
                                 stream.dataDone();
+                                return Dexie.Promise.resolve(null);
                             }).catch(function (e) {
                                 console.error("OfflineDataService.fetchData failed for type (" + selector.type + ")");
                                 console.error(e);
@@ -801,18 +802,17 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
                     db.open().then(function () {
                         var operationTable = self.operationTable(db);
                         return db.transaction('r', operationTable, function () {
-                            console.log("OfflineDataService.readOfflineOperations", self.name);
-                            Dexie.Promise.race(self.operationTable(db).where(self.operationPropertyName).anyOf("create", "update", "delete").toArray(function (offlineOperations) {
+                            return Dexie.Promise.race([self.operationTable(db).where(self.operationPropertyName).anyOf("create", "update", "delete").toArray(function (offlineOperations) {
                                 resolve(offlineOperations);
                             }).catch(function (e) {
                                 console.error(self.name + ": readOfflineOperations failed"); // Error selector is not defined.
                                 console.error(e);
                                 reject(e);
-                            }), new Promise(function (resolve, reject) {
+                            }), new Dexie.Promise(function (resolve, reject) {
                                 setTimeout(function () {
                                     resolve(null);
                                 }, 500);
-                            }));
+                            })]);
                         });
                     }).catch(function (e) {
                         console.error(self.name + ": readOfflineOperations failed"); // Error selector is not defined.
@@ -1005,9 +1005,6 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
 
                                     operations.push(iOperation);
                                 }
-                            }
-                            if (typeName === "HazardReference") {
-                                console.log("ODS.bulkAdd", clonedObjects.slice(), operations.slice());
                             }
                             return Dexie.Promise.all([table.bulkAdd(clonedObjects), operationTable.bulkAdd(operations)]);
 
@@ -1251,8 +1248,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
             return new Promise(function (resolve, reject) {
                 self._db.then(function (myDB) {
                     var operationTable = self.operationTable(myDB),
-                        primaryKey = operationTable.schema.primKey.name,
-                        deleteOperationPromises = [];
+                        primaryKey = operationTable.schema.primKey.name;
 
                     myDB.open().then(function (db) {
                         db.transaction('rw', operationTable, function () {
