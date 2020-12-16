@@ -575,10 +575,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
                                 wherePromise = Array.isArray(whereValue) ? table.where(whereProperty).anyOf(whereValue) :
                                                                            table.where(whereProperty).equals(whereValue);
     
-                                return resultPromise = wherePromise.and(function (aRecord) {
-                                    if (selector.type === "HazardReference") {
-                                        console.log("WherePromise.and", results);
-                                    }
+                                    resultPromise = wherePromise.and(function (aRecord) {
                                     var result = true;
                                     for (var i = 0, iKey, iValue, iKeyMatchValue, iOrValue;
                                         (iKey = whereProperties[i]); i++) {
@@ -595,7 +592,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
                                         } else {
                                             iKeyMatchValue = aRecord[iKey] === iValue;
                                         }
-    
+
                                         if (!(result = result && iKeyMatchValue)) {
                                             break;
                                         }
@@ -1174,7 +1171,6 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
             } else {
                 type = type;
             }
-            console.log("OfflineDataService.deleteData", moduleInfo.objectName);
 
             return new Promise(function (resolve, reject) {
                 self._db.then(function (myDB) {
@@ -1197,7 +1193,6 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
                             for (var i = 0, countI = objects.length, iRawData, iOperation, iPrimaryKey; i < countI; i++) {
                                 if ((iRawData = objects[i])) {
                                     iPrimaryKey = iRawData[primaryKey];
-                                    console.log("OfflineDataService.deleteData", iPrimaryKey, type, iRawData);
                                     updateDataPromises.push(table.delete(iPrimaryKey, iRawData));
 
                                     //Create the record to track of last modified date
@@ -1216,7 +1211,6 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
                         }).catch(function (error) {
                             console.error("DexieTransactionError.deleteData", error);
                         }).then(function () {
-                            console.log("OfflineDataService.deleteData DONE");
                             //Once this succeeded, we need to add our temporary primary keys bookkeeping:
                             //Register potential temporary primaryKeys
                             self.deleteOfflinePrimaryKeyDependenciesForData(objects, type, primaryKey);
