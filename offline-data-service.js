@@ -794,22 +794,29 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
     readOfflineOperations: {
         value: function ( /* operationMapToService */ ) {
             var self = this;
-            return new Promise(function (resolve, reject) {
+            return Dexie.Promise.race([self._readOfflineOperations(), new Dexie.Promise(function (resolve, reject) {
+                setTimeout(function () {
+                    resolve(null);
+                }, 500);
+            })]);
+        }
+    },
+
+    _readOfflineOperations: {
+        value: function () {
+            var self = this;
+            return new Dexie.Promise(function (resolve, reject) {
                 self._db.then(function (db) {
                     db.open().then(function () {
                         var operationTable = self.operationTable(db);
-                        return db.transaction('r', operationTable, function () {
-                            return Dexie.Promise.race([self.operationTable(db).where(self.operationPropertyName).anyOf("create", "update", "delete").toArray(function (offlineOperations) {
+                        db.transaction('r', operationTable, function () {
+                            return self.operationTable(db).where(self.operationPropertyName).anyOf("create", "update", "delete").toArray(function (offlineOperations) {
                                 resolve(offlineOperations);
                             }).catch(function (e) {
                                 console.error(self.name + ": readOfflineOperations failed"); // Error selector is not defined.
                                 console.error(e);
                                 reject(e);
-                            }), new Dexie.Promise(function (resolve, reject) {
-                                setTimeout(function () {
-                                    resolve(null);
-                                }, 500);
-                            })]);
+                            });
                         });
                     }).catch(function (e) {
                         console.error(self.name + ": readOfflineOperations failed"); // Error selector is not defined.
@@ -820,6 +827,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
                     reject(e);
                 });
             });
+            
         }
     },
 
