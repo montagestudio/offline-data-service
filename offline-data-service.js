@@ -633,6 +633,7 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
                             }).catch(function (e) {
                                 console.error("OfflineDataService.fetchData failed for type (" + selector.type + ")");
                                 console.error(e);
+                                stream.dataError(e);
                             });
     
                         } else {
