@@ -1658,14 +1658,35 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
     },
 
     clearAllTables: {
-        value: function () {
+        value: function (exceptions) {
             var self = this,
-                databases = [];
+                databases = [],
+                exceptionKeys = this._parseClearTableExceptions(exceptions);
 
             this._registeredOfflineDataServiceByName.forEach(function (value, key) {
-                databases.push(key);
+                if (!exceptionKeys.has(key)) {
+                    databases.push(key);
+                }
             });
             return self._clearNextDatabase(databases);
+        }
+    },
+
+    _parseClearTableExceptions: {
+        value: function (exceptions) {
+            var asSet = new Set();
+            if  (!exceptions) {
+                return asSet;
+            }
+            exceptions = Array.isArray(exceptions) ? exceptions : [exceptions];
+            exceptions.forEach(function (exception) {
+                if (exception instanceof DataService) {
+                    asSet.add(exception.identifier);
+                } else {
+                    asSet.add(exception);
+                }
+            });
+            return asSet;
         }
     },
 
