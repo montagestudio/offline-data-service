@@ -1,6 +1,7 @@
 var RawDataService = require("montage/data/service/raw-data-service").RawDataService,
     Criteria = require("montage/core/criteria").Criteria,
     DataQuery = require("montage/data/model/data-query").DataQuery,
+    DataService = require("montage/data/service/data-service").DataService,
     DataStream = require("montage/data/service/data-stream").DataStream,
     Dexie = require("dexie"),
     Montage = require("montage").Montage,
