@@ -1,6 +1,6 @@
 {
     "root": {
-        "prototype": "montage/core/meta/module-object-descriptor",
+        "prototype": "mod/core/meta/module-object-descriptor",
         "values": {
             "name": "Movie",
             "propertyDescriptors": [
@@ -20,36 +20,36 @@
         }
     },
     "id": {
-        "prototype": "montage/core/meta/property-descriptor",
-        "properties": {
+        "prototype": "mod/core/meta/property-descriptor",
+        "values": {
             "name": "id",
             "valueType": "number"
         }
     },
     "isFeatured": {
-        "prototype": "montage/core/meta/property-descriptor",
-        "properties": {
+        "prototype": "mod/core/meta/property-descriptor",
+        "values": {
             "name": "isFeatured",
             "valueType": "boolean"
         }
     },
     "releaseDate": {
-        "prototype": "montage/core/meta/property-descriptor",
-        "properties": {
+        "prototype": "mod/core/meta/property-descriptor",
+        "values": {
             "name": "releaseDate",
             "valueType": "Date"
         }
     },
     "title": {
-        "prototype": "montage/core/meta/property-descriptor",
-        "properties": {
+        "prototype": "mod/core/meta/property-descriptor",
+        "values": {
             "name": "title",
             "valueType": "string"
         }
     },
     "tomatometer": {
-        "prototype": "montage/core/meta/property-descriptor",
-        "properties": {
+        "prototype": "mod/core/meta/property-descriptor",
+        "values": {
             "name": "tomatometer",
             "valueType": "number"
         }

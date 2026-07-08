@@ -1,16 +1,16 @@
-var RawDataService = require("montage/data/service/raw-data-service").RawDataService,
-    Criteria = require("montage/core/criteria").Criteria,
-    DataQuery = require("montage/data/model/data-query").DataQuery,
-    DataService = require("montage/data/service/data-service").DataService,
-    DataStream = require("montage/data/service/data-stream").DataStream,
+var RawDataService = require("mod/data/service/raw-data-service").RawDataService,
+    Criteria = require("mod/core/criteria").Criteria,
+    DataQuery = require("mod/data/model/data-query").DataQuery,
+    DataService = require("mod/data/service/data-service").DataService,
+    DataStream = require("mod/data/service/data-stream").DataStream,
     Dexie = require("dexie"),
-    Montage = require("montage").Montage,
-    Promise = require("montage/core/promise").Promise,
-    uuid = require("montage/core/uuid"),
-    DataOrdering = require("montage/data/model/data-ordering").DataOrdering,
+    Montage = require("mod/core/core").Montage,
+    Promise = require("mod/core/promise").Promise,
+    uuid = require("mod/core/uuid"),
+    DataOrdering = require("mod/data/model/data-ordering").DataOrdering,
     DESCENDING = DataOrdering.DESCENDING,
-    evaluate = require("montage/frb/evaluate"),
-    Set = require("montage/collections/set"),
+    evaluate = require("mod/frb/evaluate"),
+    Set = require("mod/collections/set"),
     OfflineDataService;
 
 /**
@@ -27,7 +27,6 @@ exports.OfflineDataService = OfflineDataService = RawDataService.specialize( /**
 
     constructor: {
         value: function OfflineDataService() {
-            RawDataService.call(this);
         }
     },
 

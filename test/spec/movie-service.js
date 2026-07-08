@@ -1,9 +1,9 @@
 var OfflineDataService = require("offline-data-service").OfflineDataService,
-	Criteria = require("montage/core/criteria").Criteria,
-	DataQuery = require("montage/data/model/data-query").DataQuery,
-	DataService = require('montage/data/service/data-service').DataService,
+	Criteria = require("mod/core/criteria").Criteria,
+	DataQuery = require("mod/data/model/data-query").DataQuery,
+	DataService = require('mod/data/service/data-service').DataService,
 	Movie = require("logic/model/movie").Movie,
-	Promise = require("montage/core/promise").Promise;
+	Promise = require("mod/core/promise").Promise;
 
 function goOnline(callback) {
 	DataService.mainService.isOffline = false;

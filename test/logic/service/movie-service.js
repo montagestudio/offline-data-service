@@ -1,8 +1,8 @@
 var OfflineService = require("logic/service/offline-service").OfflineService,
-	DataQuery = require("montage/data/model/data-query").DataQuery,
-	DataService = require("montage/data/service/data-service").DataService,
-	DataStream = require("montage/data/service/data-stream").DataStream,
-	Promise = require("montage/core/promise").Promise;
+	DataQuery = require("mod/data/model/data-query").DataQuery,
+	DataService = require("mod/data/service/data-service").DataService,
+	DataStream = require("mod/data/service/data-stream").DataStream,
+	Promise = require("mod/core/promise").Promise;
 
 var MOVIE_RESPONSE = [];
 
@@ -10,7 +10,6 @@ exports.MovieService = OfflineService.specialize(/** @lends MovieService.prototy
 
 	constructor: {
 		value: function MovieService() {
-			OfflineService.call(this);
 			MOVIE_RESPONSE.push({
 				id: this._nextPrimaryKey(),
 				isFeatured: true,

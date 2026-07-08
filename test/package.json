@@ -17,7 +17,8 @@
   "scripts": {
   },
   "mappings": {
-    "montage": "../node_modules/montage",
+    "mod": "../node_modules/mod",
+    "montage": "../node_modules/mod",
     "montage-testing": "../node_modules/montage-testing",
     "offline-data-service": "../"
   },

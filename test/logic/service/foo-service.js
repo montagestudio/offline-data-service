@@ -1,6 +1,6 @@
 var OfflineService = require("logic/service/offline-service").OfflineService,
-    DataStream = require("montage/data/service/data-stream").DataStream,
-    Montage = require("montage").Montage,
+    DataStream = require("mod/data/service/data-stream").DataStream,
+    Montage = require("mod/core/core").Montage,
     OfflineDataService = require("offline-data-service").OfflineDataService;
 
 

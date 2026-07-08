@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "dexie": "~1.4.1",
-    "montage": "17.2.2"
+    "mod": "DisasterAWARE/mod#fix/reel-loader-montage-geo-false-match"
   },
   "devDependencies": {
     "concurrently": "^3.4.0",
@@ -32,8 +32,11 @@
     "karma-jasmine": "^1.1.0",
     "karma-phantomjs-launcher": "^1.0.2",
     "montage-testing": "git://github.com/montagejs/montage-testing.git#master",
-    "mr": "git://github.com/montagejs/mr.git#master",
     "open": "0.0.5"
+  },
+  "mappings": {
+    "mod": "../mod",
+    "montage": "../mod"
   },
   "scripts": {
     "jsdoc": "jsdoc -c jsdoc.json",
