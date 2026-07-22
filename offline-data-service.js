@@ -9,8 +9,8 @@ var RawDataService = require("mod/data/service/raw-data-service").RawDataService
     uuid = require("mod/core/uuid"),
     DataOrdering = require("mod/data/model/data-ordering").DataOrdering,
     DESCENDING = DataOrdering.DESCENDING,
-    evaluate = require("mod/frb/evaluate"),
-    Set = require("mod/collections/set"),
+    evaluate = require("mod/core/frb/evaluate"),
+    Set = require("mod/core/collections/set"),
     OfflineDataService;
 
 /**
