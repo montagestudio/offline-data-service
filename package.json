@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "dexie": "~1.4.1",
-    "mod": "DisasterAWARE/mod#fix/reel-loader-montage-geo-false-match"
+    "mod": "https://github.com/DisasterAWARE/mod.git#fix/reel-loader-montage-geo-false-match"
   },
   "devDependencies": {
     "concurrently": "^3.4.0",
